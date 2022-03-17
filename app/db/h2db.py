@@ -61,7 +61,9 @@ class DB:
         try:
             cursor = self.connect.cursor()
             cursor.execute('SELECT u.chat_id FROM user u WHERE u.chat_id = :chat_id', {"chat_id": user.chat_id})
-            result = cursor.arraysize == 1
+            res = cursor.fetchone()
+            if res is not None:
+                result = res['chat_id'] == user.chat_id
         except sqlite3.DatabaseError as e:
             print('Error: ', e)
 
@@ -72,10 +74,7 @@ class DB:
             cursor = self.connect.cursor()
             cursor.execute('INSERT INTO user(chat_id) VALUES (:chat_id)', {"chat_id": user.chat_id})
             self.connect.commit()
-            result = cursor.fetchone()
-            user.id = result['id']
-            user.student_id = result['student_id']
-            return user
+            return self.get_user(user)
         except sqlite3.DatabaseError as e:
             print('Error: ', e)
 
@@ -96,9 +95,10 @@ class DB:
         try:
             cursor = self.connect.cursor()
             cursor.execute('SELECT * FROM user u WHERE u.chat_id = :chat_id', {"chat_id": user.chat_id})
-            result = cursor.fetchone()
-            user.id = result['id']
-            user.student_id = result['student_id']
+            res = cursor.fetchone()
+            if res is not None:
+                user.id = res['id']
+                user.student_id = res['student_id']
             return user
         except sqlite3.DatabaseError as e:
             print('Error: ', e)
@@ -112,8 +112,10 @@ class DB:
         try:
             self.connectdb(self.url)
             cursor = self.connect.cursor()
-            cursor.execute('SELECT 1 as \'a\' FROM "group" g WHERE g.id = :id', {'id': param})
-            result = cursor.arraysize == 1
+            cursor.execute('SELECT * FROM "group" g WHERE g.id = :id', {'id': param})
+            res = cursor.fetchone()
+            if res is not None:
+                result = res['id'] == param
         except sqlite3.DatabaseError as e:
             print('Error: ', e)
         finally:
@@ -125,8 +127,10 @@ class DB:
         try:
             self.connectdb(self.url)
             cursor = self.connect.cursor()
-            cursor.execute('SELECT 1 as \'a\' FROM faculty g WHERE g.id = :id', {'id': param})
-            result = cursor.rowcount == 1
+            cursor.execute('SELECT * FROM faculty g WHERE g.id = :id', {'id': param})
+            res = cursor.fetchone()
+            if res is not None:
+                result = res['id'] == param
         except sqlite3.DatabaseError as e:
             print('Error: ', e)
         finally:
@@ -150,9 +154,11 @@ class DB:
         result = False
         try:
             cursor = self.connect.cursor()
-            cursor.execute('SELECT 1 as \'a\' FROM user u WHERE u.chat_id = :chat_id AND u.student_id not NULL',
+            cursor.execute('SELECT u.chat_id FROM user u WHERE u.chat_id = :chat_id AND u.student_id not NULL',
                            {"chat_id": chat_id})
-            result = cursor.arraysize == 1
+            res = cursor.fetchone()
+            if res is not None:
+                result = res['chat_id'] == chat_id
         except sqlite3.DatabaseError as e:
             print('Error: ', e)
 
