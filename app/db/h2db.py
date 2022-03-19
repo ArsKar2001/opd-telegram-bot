@@ -49,25 +49,13 @@ class DB:
 
     def upset_user(self, user):
         self.connectdb(self.url)
-        if self.user_is_exist(user):
+        get_user = self.get_user(user)
+        if get_user is not None:
             user = self.update_user(user)
         else:
             user = self.user_insert(user)
         self.connect.close()
         return user
-
-    def user_is_exist(self, user):
-        result = False
-        try:
-            cursor = self.connect.cursor()
-            cursor.execute('SELECT u.chat_id FROM user u WHERE u.chat_id = :chat_id', {"chat_id": user.chat_id})
-            res = cursor.fetchone()
-            if res is not None:
-                result = res['chat_id'] == user.chat_id
-        except sqlite3.DatabaseError as e:
-            print('Error: ', e)
-
-        return result
 
     def user_insert(self, user):
         try:
@@ -95,13 +83,10 @@ class DB:
         try:
             cursor = self.connect.cursor()
             cursor.execute('SELECT * FROM user u WHERE u.chat_id = :chat_id', {"chat_id": user.chat_id})
-            res = cursor.fetchone()
-            if res is not None:
-                user.id = res['id']
-                user.student_id = res['student_id']
-            return user
+            return cursor.fetchone()
         except sqlite3.DatabaseError as e:
             print('Error: ', e)
+        return None
 
     def connectdb(self, url):
         self.connect = sqlite3.connect(url)
@@ -113,9 +98,7 @@ class DB:
             self.connectdb(self.url)
             cursor = self.connect.cursor()
             cursor.execute('SELECT * FROM "group" g WHERE g.id = :id', {'id': param})
-            res = cursor.fetchone()
-            if res is not None:
-                result = res['id'] == param
+            result = cursor.fetchone() is not None
         except sqlite3.DatabaseError as e:
             print('Error: ', e)
         finally:
@@ -128,9 +111,7 @@ class DB:
             self.connectdb(self.url)
             cursor = self.connect.cursor()
             cursor.execute('SELECT * FROM faculty g WHERE g.id = :id', {'id': param})
-            res = cursor.fetchone()
-            if res is not None:
-                result = res['id'] == param
+            result = cursor.fetchone() is not None
         except sqlite3.DatabaseError as e:
             print('Error: ', e)
         finally:
@@ -154,22 +135,19 @@ class DB:
         result = False
         try:
             cursor = self.connect.cursor()
-            cursor.execute('SELECT u.chat_id FROM user u WHERE u.chat_id = :chat_id AND u.student_id not NULL',
+            cursor.execute('SELECT * FROM user u WHERE u.chat_id = :chat_id AND u.group_id not NULL',
                            {"chat_id": chat_id})
-            res = cursor.fetchone()
-            if res is not None:
-                result = res['chat_id'] == chat_id
+            result = cursor.fetchone() is not None
         except sqlite3.DatabaseError as e:
             print('Error: ', e)
-
         return result
 
     def update_user(self, user):
         try:
             cursor = self.connect.cursor()
             cursor.execute("""UPDATE user
-                                SET student_id = :student_id
-                                WHERE chat_id = :chat_id""", {"student_id": user.student_id, "chat_id": user.chat_id})
+                                SET group_id = :group_id
+                                WHERE chat_id = :chat_id""", {"group_id": user.group_id, "chat_id": user.chat_id})
             self.connect.commit()
             return self.get_user(user)
         except sqlite3.DatabaseError as e:

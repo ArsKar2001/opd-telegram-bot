@@ -45,7 +45,7 @@ class Student:
 class User:
     id: int
     chat_id: int
-    student_id: int
+    group_id: int
 
     def __init__(self, chat_id):
         self.chat_id = chat_id
