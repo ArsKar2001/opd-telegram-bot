@@ -15,7 +15,8 @@ async def cmd_start(message: types.Message, state: FSMContext):
     db.upset_user(user)
     await state.finish()
     await message.answer(
-        text="Привет, дорогой студент. Я ОПД Бот помогу тебе разобраться с проблемами/вопросами, связанными с ОПД. Выполни команду /reg для регистрации :D",
+        text="Привет, дорогой студент. Я ОПД Бот помогу тебе разобраться с проблемами/вопросами, связанными с ОПД. "
+             "Выполни команду /reg для регистрации :D",
         reply_markup=types.ReplyKeyboardRemove())
 
 
